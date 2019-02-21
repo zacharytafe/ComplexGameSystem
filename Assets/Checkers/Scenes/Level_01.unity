@@ -483,6 +483,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c2af8c7f1552a94d867d59b69b5f79b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WhitePiecePrefab: {fileID: 0}
+  blackPiecePrefab: {fileID: 0}
+  checkersParent: {fileID: 0}
+  boardOffset: {x: -4, y: 0, z: -4}
+  pieceOffset: {x: 0.5, y: 0, z: 0.5}
+  rayDistance: 1000
+  hitLayers:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1 &1124694357
 GameObject:
   m_ObjectHideFlags: 0
@@ -635,3 +644,30 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4615996979013508, guid: abb8b941d9d6c7b47b24fdfe81120164,
     type: 2}
   m_PrefabInternal: {fileID: 1979423003}
+--- !u!1 &2059356114 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1717256017184588, guid: d9ca0a3a308299140a9e03cc560eb3fc,
+    type: 2}
+  m_PrefabInternal: {fileID: 771004170}
+--- !u!114 &2059356115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2059356114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c2af8c7f1552a94d867d59b69b5f79b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhitePiecePrefab: {fileID: 1851601855648522, guid: 9ad876bc5898dbc4abf4c5032476f549,
+    type: 2}
+  blackPiecePrefab: {fileID: 1922655070294576, guid: abb8b941d9d6c7b47b24fdfe81120164,
+    type: 2}
+  checkersParent: {fileID: 278753471}
+  boardOffset: {x: -4, y: 0, z: -4}
+  pieceOffset: {x: 0.5, y: 0, z: 0.5}
+  rayDistance: 1000
+  hitLayers:
+    serializedVersion: 2
+    m_Bits: 0

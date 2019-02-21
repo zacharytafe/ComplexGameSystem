@@ -15,7 +15,8 @@ namespace Checkers
         public Vector3 pieceOffset = new Vector3(.5f, 0, .5f);
         public float rayDistance = 1000f;
         public LayerMask hitLayers;
-        public Piece[,] Pieces = new Piece[8, 8];
+
+        public Piece[,] pieces = new Piece[8, 8];
 
         /*
          * isWhite = Is the player currently the white piece?
@@ -29,7 +30,7 @@ namespace Checkers
         private Piece selectedPiece = null;
 
     
-        void Start()
+        private void Start()
         {
             GenerateBoard();
         }
@@ -48,7 +49,7 @@ namespace Checkers
                 if (Input.GetMouseButtonDown(0))
                 {
                     //try selecting piece
-                    selectedPiece = SelectedPiece(x, y);
+                    selectedPiece = SelectPiece(x, y);
                     startDrag = new Vector2(x, y);
                 }
                 // If there is a selected piece
@@ -124,7 +125,7 @@ namespace Checkers
         /// <param name="x">X Location</param>
         /// <param name="y">Y Location</param>
         /// <returns></returns>
-        private Piece SelectedPiece(int x, int y)
+        private Piece SelectPiece(int x, int y)
         {
             // Check if X and Y is out of bounds
             if (OutOfBounds(x, y))
@@ -132,7 +133,7 @@ namespace Checkers
                 return null;
 
             // Get the piece at X and Y location
-            Piece piece = Pieces[x, y];
+            Piece piece = pieces[x, y];
 
             // Check that it is't null
             if (piece)
@@ -212,6 +213,7 @@ namespace Checkers
             int x2 = (int)end.x;
             int y2 = (int)end.y;
 
+            // Note - may not need this later
             // Record start Drag and end Drag
             startDrag = new Vector2(x1, x2);
             endDrag = new Vector2(x2, y2);
@@ -241,6 +243,13 @@ namespace Checkers
             }
         }
 
+        /// <summary>
+        /// Checks if given coordinates are out of the board range
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+
         private bool OutOfBounds(int x, int y)
         {
             return x < 0 || x >= 8 || y < 0 || y >= 8;
@@ -253,24 +262,122 @@ namespace Checkers
             int x2 = (int)end.x;
             int y2 = (int)end.y;
 
-            // Is the start the same as the end?
+            #region Rule 1 - Is the start the same as the end?
             if(start == end)
             {
                 // You can move back where you were
                 return true;
             }
+            #endregion
 
-            // If you moving on top of another piece
-            if(Pieces[x2, y2])
+            #region Rule 2 - If you moving on top of another piece
+            if (pieces[x2, y2])
             {
                 return true;
             }
 
-            if(Pieces[x2, y2])
+            if(pieces[x2, y2])
             {
                 return false;
             }
-            return true;
+            // Rule 3 - Detect if we're moving forward and diagonal
+            int XLocation = x1 - x2;
+            int YLocation = y1 - y2;
+
+            // If the range is of magnitude 1
+            if (Mathf.Abs(XLocation) == 1 &&
+                Mathf.Abs(YLocation) == 1)
+
+            if(XLocation == 0 || YLocation == 0)
+            {
+                return false;
+            }
+            #endregion
+
+            #region Rule 3 - Detect if we're moving forwards and backwards
+            // Store X change value (abs)
+            int locationX = Mathf.Abs(x1 - x2);
+            int locationY = y2 - y1;
+
+            if(selectedPiece.isWhite || selectedPiece.isKing)
+            {
+                // Check if we're moving diagonally right
+                if(locationX == 1 && locationY == 1)
+                {
+                    // This is a valid move
+                    return true;
+                }
+                // if moving diagonally left (two spaces)
+                else if(locationX == 2 && locationY == -2)
+                {
+                    // Get the piece in between move
+                    Piece pieceBetween = GetPieceBetween(start, end);
+                    // If there is a piece between AND the piece isnt the same colour
+                    if(pieceBetween != null &&
+                        pieceBetween.isWhite != selectedPiece.isWhite)
+                    {
+                        // Destroy the piece between
+                        RemovePiece(pieceBetween);
+                        // Get the piece in between move
+                        return true;
+                    }
+                }
+            }
+
+            if (!selectedPiece.isWhite || selectedPiece.isKing)
+            {
+                if(locationX == 1 && locationY == 1)
+                {
+                    return true;
+                }
+            }
+
+            // print("X Location: " + XLocation + "Y Location" + YLocation);
+            #endregion
+
+            return false;        
+        }
+
+        private Piece GetPieceBetween(Vector2 start, Vector2 end)
+        {
+            int xIndex = (int)(start.x + end.x) / 2;
+            int yIndex = (int)(start.y + end.y) / 2;
+            return pieces[xIndex, yIndex];
+        }
+
+        // Removes a piece from the board
+        private void RemovePiece(Piece pieceToRemove)
+        {
+            // Remove from array
+            pieces[pieceToRemove.x, pieceToRemove.y] = null;
+            // Destroy the gameobject of the piece immediately
+            DestroyImmediate(pieceToRemove.gameObject);
+        }
+
+        // Runs after turn is finished
+        private void EndTurn()
+        {
+            CheckForKing();
+        }
+
+        // Check if a piece needs to be kinged
+        void CheckForKing()
+        {
+            int x = (int)endDrag.x;
+            int y = (int)endDrag.y;
+            // Check if the selected piece needs to be kinged
+            if(selectedPiece && !selectedPiece.isKing)
+            {
+                bool whiteNeedsKing = selectedPiece.isWhite && y == 7;
+                bool blackNeedsKing = !selectedPiece.isWhite && y == 0;
+                // If the selected piece is white and reached the end of board
+                if (whiteNeedsKing || blackNeedsKing)
+                {
+                    // Selected piece is crowned
+                    selectedPiece.isKing = true;
+                    // Run animations
+                }
+            }
         }
 
     }
