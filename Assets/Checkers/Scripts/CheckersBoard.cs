@@ -40,7 +40,7 @@ namespace Checkers
             // Update the mouse over information
             MouseOver();
             // Is it currently whites turn
-            if (isWhiteTurn)
+            if (isWhiteTurn) // This is for switching turns on network
             {
                 // Get x and y coordinates of selected mouse over
                 int x = (int)mouseOver.x;
@@ -63,8 +63,8 @@ namespace Checkers
                 if (Input.GetMouseButtonUp(0))
                 {
                     endDrag = new Vector2(x, y);
-                    TryMove(startDrag, endDrag);
-                    selectedPiece = null;
+                    TryMove(startDrag, endDrag); // Try movig the piece
+                    selectedPiece = null; // Let go of the piece
                 }
             }
         }
@@ -233,13 +233,17 @@ namespace Checkers
                 if (ValidMove(start, end))
                 {
                     // Replace end coordinates with our selected piece
-                    MovePiece(selectedPiece, x2, y2);             
+                    MovePiece(selectedPiece, x2, y2);
+                    // Check for king (only if successful)
+                    CheckForKing();
                 }
                 else
                 {
                     // Move it back to original (start)
                     MovePiece(selectedPiece, x1, y1);
                 }
+
+                EndTurn();
             }
         }
 
@@ -357,7 +361,17 @@ namespace Checkers
         // Runs after turn is finished
         private void EndTurn()
         {
-            CheckForKing();
+            // Note: back to this later
+        }
+
+        private void StartTurn()
+        {
+            List<Piece> forcedPieces = GetPossibleMoves();
+            if(forcedPieces.Count != 0)
+            {
+                // We're forced to move the pieces
+                print("There are more forced pieces");
+            }
         }
 
         // Check if a piece needs to be kinged
@@ -374,11 +388,80 @@ namespace Checkers
                 if (whiteNeedsKing || blackNeedsKing)
                 {
                     // Selected piece is crowned
-                    selectedPiece.isKing = true;
-                    // Run animations
+                    selectedPiece.King();
                 }
             }
         }
+
+        /// <summary>
+        /// Detect if there is a forced move for a given piece
+        /// </summary>
+        /// <param name="piece"></param>
+        /// <returns></returns>
+        public bool IsForcedMove(Piece piece)
+        {
+            int x = piece.x;
+            int y = piece.y;
+
+            // Is the piece white or kinged
+            if (piece.isWhite || piece.isKing)
+            {
+                for (int i = -1; i <= 1; i++)
+                {
+                    for(int j = -1; j <= 1; j++)
+                    {
+                        if (i == 0 || j == 0)
+                        {
+                            continue;
+                        }
+
+                        int x1 = piece.x + i;
+                        int y1 = piece.y + j;
+
+                        if(OutOfBounds(x, y))
+                        {
+                            continue;
+                        }
+
+                        Piece detectedPiece = pieces[x, y];
+                        if(detectedPiece != null && detectedPiece.isWhite != selectedPiece.isWhite)
+                        {
+                            // Check if we can jump (if the cell next to it is empty)
+                            Piece destinationCell = pieces[x + i, i + j];
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If all else fails, it means there is no forced move for this piece
+            return false;
+        }
+
+        public List<Piece> GetPossibleMoves()
+        {
+            List<Piece> forcedPieces = new List<Piece>();
+
+            for (int x = 0; x <8; x++)
+            {
+                for (int y = 0; x < 8; y++)
+                {
+                    Piece pieceToCheck = pieces[x, y];
+                    if(pieceToCheck != null)
+                    {
+                        if(IsForcedMove(pieceToCheck))
+                        {
+                            forcedPieces.Add(pieceToCheck);
+                        }
+                    }
+                }
+            }
+
+            return forcedPieces;
+        }
+
 
     }
 }
